@@ -83,15 +83,6 @@ impl Gun {
     }
 }
 
-impl fmt::Display for Gun {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Gun {{ name: {}, price: {}, damage: {}, gift: {}, type_of: {} }}",
-            self.name, self.price, self.damage, self.gift, self.type_of
-        )
-    }
-}
 impl PartialEq for Gun {
     fn eq(&self, other: &Self) -> bool {
         self.damage == other.damage
@@ -142,7 +133,7 @@ impl Guns {
         Ok(())
     }
 
-    pub fn add_gun(&mut self, gun: &Rc<Gun>) -> Result<(), String> {
+    pub fn add_gun(&mut self, gun: Rc<Gun>) -> Result<(), String> {
         if self.list.iter().any(|x| gun.get_name() == x.get_name()) {
             return Err("the gun is exist!".to_string());
         } else if gun.get_type_of() == &TypeOfGun::Knife
@@ -154,7 +145,7 @@ impl Guns {
             return Err("The knife exist".to_string());
         }
 
-        self.list.push(gun.clone());
+        self.list.push(gun);
         Ok(())
     }
 
@@ -168,10 +159,11 @@ impl Guns {
     }
 
     pub fn get_gun(&self, name: &str) -> Result<Rc<Gun>, String> {
-        match self.list.iter().position(|gun| gun.get_name() == name) {
-            Some(index) => Ok(self.list[index].clone()),
-            None => Err("invalid category gun".to_string()),
-        }
+        self.list
+            .iter()
+            .find(|gun| gun.get_name() == name)
+            .cloned()
+            .ok_or("invalid category gun".to_string())
     }
 
     pub fn get_guns_with_type(&self, type_of_gun: TypeOfGun) -> Result<Vec<Rc<Gun>>, String> {
